@@ -1,0 +1,148 @@
+<html>
+<head>
+	<title>Holsteni kalkulaator</title>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<style>
+	h2 {
+		font-family: "Courier New";
+	}
+	
+	.reference {
+		font-size: 9px;
+		color: #aaa;
+		display: block;
+	}
+	
+	.reference a {
+		color: #aaa;
+	}
+	
+	input,button {
+		margin-left: 10px;
+		border: 1px solid gray;
+		background-color: white;
+	}
+	
+	input {
+		width: 50px;
+	}
+	
+	button:hover {
+		background-color: lightgray;
+	}
+	</style>
+	<script src="js/jquery-1.8.2.js" ></script>
+	<script>
+		var WALTER_PRICE = 0.53;
+		var TARE_PRICE = 0.10;
+		
+		function getNumWalters(money) {
+			var ret = [0, 0];
+			ret[0]=Math.floor(money/WALTER_PRICE);
+			ret[1]=round(money-ret[0]*WALTER_PRICE);
+			return ret;
+		}
+		
+		function round(f) {
+			return Math.round(f*Math.pow(10,2))/Math.pow(10,2);
+		}
+		
+		function computeCycles(money) {
+			var log = $('#log');
+			log.empty();
+			
+			if (money<WALTER_PRICE) {
+				log.append('Sa ei saa &uuml;htegi Holstenit, mine otsi rohkem raha.\n');
+				return;
+			}
+
+			if (WALTER_PRICE==0.0) {
+				log.append('Ma ei tea kuidas sul siuke diil &otilde;nnestus saada, aga sa saad l&otilde;putult Holsteneid!\n');
+				return;
+			}
+
+			if (Math.abs(WALTER_PRICE-TARE_PRICE)<0.001) {
+				log.append('Olete sisenenud l&otilde;pmatusse tsüklisse.\n');
+				return;
+			}
+
+			if (WALTER_PRICE<TARE_PRICE) {
+				log.append('&Otilde;nnitlused! Olete saanud juues miljon&auml;riks.\n');
+				return;
+			}
+			
+			var totalWalters = 0;
+			var cycle = 1;
+			while (money>=WALTER_PRICE) {
+				var walters = getNumWalters(money);
+				totalWalters+=walters[0];
+				money=round(walters[1] + TARE_PRICE*walters[0]);
+				var line = 'Ts&uuml;kkel #'+cycle+':\n';
+				line+='\tSaad '+walters[0]+' Holsteni'+(walters[0]>1?'t':'')+'.\n';
+				if (walters[1]>0.0)
+					line+='\tRaha j&auml;&auml;b &uuml;le '+walters[1].toFixed(2)+'&euro;\n';
+				line+='\tTaara eest saad '+(TARE_PRICE*walters[0]).toFixed(2)+'&euro;\n';
+				line+='\tKokku '+money.toFixed(2)+'&euro;\n';
+				line+='\n\n';
+				log.append(line);
+				cycle++;
+			}
+			
+			log.append('\n\nKokku saad '+totalWalters+' Holstenit\n');
+			
+			if (money>0.0) {
+				log.append('Kui sul oleks veel '+round(WALTER_PRICE-money).toFixed(2)+'&euro;, siis saaksid veel &uuml;he Holsteni!');
+			}
+		}
+
+		function doit() {
+			var wprice=parseFloat($('#walter_price').val());
+			if (isNaN(wprice) || !isFinite(wprice))
+				wprice=WALTER_PRICE;
+			if (wprice<0.0) wprice=0.0;
+			wprice=Math.round(wprice*100.0)/100.0;
+			$('#walter_price').val(wprice);
+			WALTER_PRICE=wprice;
+			var money = $('#money').val();
+			if (money=="") return;
+			money = parseFloat(money);
+			if (!isFinite(money)) {
+				var log = $('#log');
+				log.empty();
+				log.append('Ei usu. Kellelgi pole nii palju raha Holsteni ostmiseks.');
+				return;
+			}
+			if (isNaN(money) || money<0.0)
+				money=0.0;
+			$('#money').val(money);
+			computeCycles(money);
+		}
+
+		$(function() {
+			$('#money').focus();
+		})
+	</script>
+</head>
+<body>
+	<h2>Holsteni kalkulaator<span class="reference"></span></h2>
+	<table>
+		<caption><b>Algandmed:</b></caption>
+		<tbody>
+			<tr>
+				<td>Walteri hind:</td>
+				<td><input id="walter_price" type="text" value="0.53" /> 1 tk/&euro; (koos pandiga)</td>
+			</tr>
+		</tbody>
+	</table>
+	<br /><br />
+	<form onsubmit="return false;">
+		Mul on <input id="money" type="text" onsubmit="doit();return false;" /> &euro;
+		<button onclick="doit();return false;">Arvuta</button>
+	</form>
+	<br />
+	<br />
+	<pre id="log"></pre>
+  <img src="https://shuupi.s3.eu-north-1.amazonaws.com/images/4740019768589/200x200.png" alt="Holsten">
+</body>
+</html>
